@@ -8,7 +8,7 @@ on:
       - 'main'
 jobs:
   lint-html:
-    run-on: ubuntu-latest
+    runs-on: ubuntu-latest
     steps:
       - name: checkout repo
         uses: actions/checkout@6
