@@ -1,0 +1,23 @@
+name: ci
+on:
+  pull_request:
+    branches:
+      - 'main'
+  push:
+    branches:
+      - 'main'
+jobs:
+  lint-html:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout repo
+        uses: actions/checkout@v6
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+
+      - name: Install dependencies
+        run: npm i -g htmlhint
+
+      - name: Run html linter
+        run: npx htmlhint index.html
