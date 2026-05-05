@@ -21,3 +21,31 @@ jobs:
 
       - name: Run html linter
         run: npx htmlhint index.html
+  review:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Run Codex review
+      id: codex
+      uses: openai/codex-action@v1
+      with:
+        openai-api-key: ${{ secrets.AZURE_OPENAI_API_KEY }}
+        responses-api-endpoint: "https://arnost-havelka-1536-resource.services.ai.azure.com/api/projects/devops_course/agents/devops-course-agenet/protocols/openai/v1/responses"
+        prompt: |
+          Review this pull request diff.
+  
+          Focus on:
+          - bugs
+          - bad practices
+          - security issues
+          - readability
+  
+          Be concise. Use bullet points.
+
+    - name: Post comment
+      run: |
+        gh pr comment ${{ github.event.pull_request.number }} \
+          --body "${{ steps.codex.outputs.final-message }}"
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
