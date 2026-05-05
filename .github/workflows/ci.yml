@@ -12,12 +12,57 @@ jobs:
     steps:
       - name: checkout repo
         uses: actions/checkout@v6
-
+  
       - name: Use Node.js
         uses: actions/setup-node@v4
-
+  
       - name: Install dependencies
         run: npm i -g htmlhint
-
+  
       - name: Run html linter
-        run: npx htmlhint index.html
+        run: npx htmlhint index.html   
+  codex-review:
+      runs-on: ubuntu-latest
+      permissions:
+        pull-requests: write
+        contents: read
+  
+      steps:
+        - name: Checkout repository
+          uses: actions/checkout@v4
+          with:
+            fetch-depth: 0
+  
+        - name: Setup Node.js
+          uses: actions/setup-node@v4
+          with:
+            node-version: '20'
+  
+        - name: Install Codex CLI
+          run: npm install -g @openai/codex
+  
+        - name: Generate PR Diff
+          run: git diff origin/${{ github.base_ref }}...HEAD > pr_diff.txt
+  
+        - name: Run Codex Review
+          env:
+            OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          run: |
+            PROMPT="Act as a strict code reviewer. Review the following code diff for bugs, logic errors, and security risks. Skip minor formatting nitpicks: $(cat pr_diff.txt)"
+            
+            # Ask the Codex CLI and pipe output
+            codex ask "$PROMPT" > review_output.md
+            
+        - name: Post Review as PR Comment
+          uses: actions/github-script@v7
+          with:
+            script: |
+              const fs = require('fs');
+              const reviewBody = fs.readFileSync('review_output.md', 'utf8');
+              
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: `### 🤖 Codex PR Review\n\n${reviewBody}`
+              });
