@@ -21,33 +21,12 @@ jobs:
 
       - name: Run html linter
         run: npx htmlhint index.html
-
-  codex-review:
+  update_changelog:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
-
-      - name: Run Codex review
-        id: codex
-        uses: openai/codex-action@v1
-        with:
-          openai-api-key: ${{ secrets.AZURE_OPENAI_API_KEY }}
-          responses-api-endpoint: "https://arnost-havelka-1536-resource.openai.azure.com/openai/v1"
-          prompt: |
-            Review this pull request diff.
-
-            Focus on:
-            - bugs
-            - bad practices
-            - security issues
-            - readability
-
-            Be concise. Use bullet points.
-
-      - name: Post comment
+      - name: Update changelog via Codex
         run: |
-          gh pr comment ${{ github.event.pull_request.number }} \
-            --body "${{ steps.codex.outputs.final-message }}"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          npm install -g @openai/codex
+          export AZURE_OPENAI_API_KEY="${{ secrets.AZURE_OPENAI_API_KEY }}" 
+          codex -p azure exec --full-auto "update CHANGELOG for next release"
