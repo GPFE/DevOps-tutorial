@@ -33,7 +33,7 @@ jobs:
         uses: openai/codex-action@v1
         with:
           openai-api-key: ${{ secrets.AZURE_OPENAI_API_KEY }}
-          responses-api-endpoint: "https://arnost-havelka-1536-resource.services.ai.azure.com/api/projects/devops_course/agents/devops-course-agenet/protocols/openai/v1/responses"
+          responses-api-endpoint: "https://arnost-havelka-1536-resource.openai.azure.com/openai/v1"
           prompt: |
             Review this pull request diff.
 
