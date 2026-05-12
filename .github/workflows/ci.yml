@@ -24,6 +24,8 @@ jobs:
   ai-code-review:
     runs-on: ubuntu-latest
     steps:
+      - name: checkout repo
+        uses: actions/checkout@v6
       - shell: bash
         env:
           AZURE_API_KEY: ${{ secrets.AZURE_API_KEY }}
