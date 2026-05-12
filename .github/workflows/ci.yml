@@ -21,3 +21,37 @@ jobs:
 
       - name: Run html linter
         run: npx htmlhint index.html
+  ai-code-review:
+    runs-on: ubuntu-latest
+    steps:
+      - shell: bash
+        env:
+          AZURE_API_KEY: ${{ secrets.AZURE_API_KEY }}
+        run: |
+          curl -X POST "https://arnost-havelka-1536-resource.openai.azure.com/openai/v1/chat/completions" \
+          -H "Content-Type: application/json" \
+          -H "Authorization: Bearer $AZURE_API_KEY" \
+          -d '{
+              "messages" : [
+                  {
+                          "role": "user",
+                          "content": "these are my code changes: $(git diff origin/main)"
+                  },
+                  {
+                          "role": "assistant",
+                          "content": "professional programmer with knowledge of clean code principles"
+                  },
+                  {
+                          "role": "user",
+                          "content": "refactor this code and fix bugs"
+                  }
+          ],
+               "max_completion_tokens" : 13107,
+               "temperature" : 1,
+               "top_p" : 1,
+               "stop" : [],
+               "frequency_penalty" : 0,
+               "presence_penalty" : 0,
+              "model": "gpt-4.1"
+          }'
+    
