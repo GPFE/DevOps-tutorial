@@ -24,35 +24,46 @@ jobs:
   ai-code-review:
     runs-on: ubuntu-latest
     steps:
-      - shell: bash
-        env:
-          AZURE_API_KEY: ${{ secrets.AZURE_API_KEY }}
-        run: |
-          export DIFF=$(git diff origin/main)
-          curl -X POST "https://arnost-havelka-1536-resource.openai.azure.com/openai/v1/chat/completions" \
-          -H "Content-Type: application/json" \
-          -H "Authorization: Bearer $AZURE_API_KEY" \
-          -d '{
-              "messages" : [
-                  {
-                          "role": "user",
-                          "content": "these are my code changes: $DIFF"
-                  },
-                  {
-                          "role": "assistant",
-                          "content": "professional programmer with knowledge of clean code principles"
-                  },
-                  {
-                          "role": "user",
-                          "content": "refactor this code and fix bugs"
-                  }
-          ],
-               "max_completion_tokens" : 13107,
-               "temperature" : 1,
-               "top_p" : 1,
-               "stop" : [],
-               "frequency_penalty" : 0,
-               "presence_penalty" : 0,
-              "model": "gpt-4.1"
-          }'
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0 
     
+    - name: Run code review
+      env:
+        AZURE_API_KEY: ${{ secrets.AZURE_API_KEY }}
+      run: |
+        pwd
+        
+        # 2. Independent commands (no trailing backslashes)
+        DIFF=$(git diff origin/main)
+        
+        # 3. Safely build the JSON payload using jq to handle the diff's special characters
+        JSON_PAYLOAD=$(jq -n --arg diff "$DIFF" '{
+          "messages": [
+            {
+              "role": "user",
+              "content": "these are my code changes:\n\($diff)"
+            },
+            {
+              "role": "assistant",
+              "content": "professional programmer with knowledge of clean code principles"
+            },
+            {
+              "role": "user",
+              "content": "refactor this code and fix bugs"
+            }
+          ],
+          "max_completion_tokens": 13107,
+          "temperature": 1,
+          "top_p": 1,
+          "stop": [],
+          "frequency_penalty": 0,
+          "presence_penalty": 0,
+          "model": "gpt-4.1"
+        }')
+    
+        # 4. Send the request (Notice we use double quotes around $JSON_PAYLOAD)
+        curl -X POST "https://arnost-havelka-1536-resource.openai.azure.com/openai/v1/chat/completions" \
+          -H "Content-Type: application/json" \
+          -H "api-key: $AZURE_API_KEY" \
+          -d "$JSON_PAYLOAD"
