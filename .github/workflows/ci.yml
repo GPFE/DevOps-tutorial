@@ -30,7 +30,8 @@ jobs:
         env:
           AZURE_API_KEY: ${{ secrets.AZURE_API_KEY }}
         run: |
-          export DIFF=$(git diff origin/main) &&
+          pwd \
+          export DIFF=$(git diff origin/main) \
           curl -X POST "https://arnost-havelka-1536-resource.openai.azure.com/openai/v1/chat/completions" \
           -H "Content-Type: application/json" \
           -H "Authorization: Bearer $AZURE_API_KEY" \
